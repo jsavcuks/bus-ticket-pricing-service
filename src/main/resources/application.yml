@@ -1,0 +1,30 @@
+# src/main/resources/application.yml
+spring:
+  datasource:
+    url: jdbc:h2:mem:busdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yml
+    enabled: true
+  jpa:
+    open-in-view: false
+    show-sql: true
+    hibernate:
+      ddl-auto: none  # schema managed by Liquibase
+    properties:
+      hibernate:
+        format_sql: true
+
+# Optional logging to see SQL and Liquibase output clearer
+logging:
+  level:
+    liquibase: info
+    org.springframework.jdbc.core: debug
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql: trace
