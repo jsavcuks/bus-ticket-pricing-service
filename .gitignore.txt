@@ -3,10 +3,10 @@
 *.iml
 
 # Build outputs
-/build/
-/out/
-/target/
-/artifacts/
+build/
+out/
+target/
+artifacts/
 
 # OS and IDE files
 .DS_Store
