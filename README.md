@@ -96,20 +96,30 @@ API
         }
 - Error responses
     - 404 Not Found: unknown route (terminal not in DB)
-      - ```json
-         {
-              "timestamp": "2025-09-20 12:58:50",
-              "status": 404,
-              "error": "Validation error",
-              "path": "/api/pricing/draft",
-              "errors": [
-                  {
-                  "field": "route",
-                  "message": "route not found",
-                  "rejectedValue": "Kaunas, Lithuania"
-                  }
-              ]
-          }
+      - ```json (request)
+            {
+                "route": "Kaunas, Lithuania",
+                "passengers": [
+                    {
+                    "type": "ADULT",
+                    "luggageCount": -1
+                    }
+                ]
+            }
+      - ```json (response)
+           {
+                "timestamp": "2025-09-20 12:58:50",
+                "status": 404,
+                "error": "Validation error",
+                "path": "/api/pricing/draft",
+                "errors": [
+                    {
+                    "field": "route",
+                    "message": "route not found",
+                    "rejectedValue": "Kaunas, Lithuania"
+                    }
+                ]
+            }
     - 400 Bad Request: validation failed (blank route, empty passengers, etc.) 
       - ```json
             {
