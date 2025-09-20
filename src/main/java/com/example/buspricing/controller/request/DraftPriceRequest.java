@@ -17,13 +17,13 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class DraftPriceRequest {
-    @NotBlank
+    @NotBlank(message = "Route must not be blank")
     private String route;
 
-    @NotNull
+    @NotNull(message = "Date is required")
     private LocalDate date;
 
-    @NotEmpty
+    @NotEmpty(message = "Passengers list must not be empty")
     @Valid
     private List<Passenger> passengers;
 }

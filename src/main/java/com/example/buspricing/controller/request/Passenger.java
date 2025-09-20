@@ -1,5 +1,6 @@
 package com.example.buspricing.controller.request;
 
+import jakarta.validation.constraints.Max;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,9 +15,10 @@ import jakarta.validation.constraints.NotNull;
 public class Passenger {
     public enum Type { ADULT, CHILD }
 
-    @NotNull
+    @NotNull(message = "Passenger type is required")
     private Type type;
 
-    @Min(0)
+    @Min(value = 0, message = "Luggage count must be greater than or equal to 0")
+    @Max(value = 100, message = "Luggage count must be less than or equal to 100")
     private int luggageCount;
 }

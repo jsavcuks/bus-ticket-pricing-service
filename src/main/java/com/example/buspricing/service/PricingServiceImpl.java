@@ -38,20 +38,33 @@ public class PricingServiceImpl implements PricingService {
 
         List<ItemPrice> items = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
-
+        int passengerCount = 1;
         for (Passenger p : request.getPassengers()) {
             // Passenger fare
             BigDecimal passengerPreTax;
             String passengerDesc;
+            String priceDesc;
             if (p.getType() == Passenger.Type.ADULT) {
                 passengerPreTax = base;
-                passengerDesc = "Adult";
+                passengerDesc = String.format("Passenger %d (%s)", passengerCount, "Adult");
+                priceDesc = String.format("Adult (%.2f EUR + %s%%)",
+                        base,
+                        taxPercentSum.stripTrailingZeros().toPlainString());
             } else {
                 passengerPreTax = base.multiply(CHILD_DISCOUNT);
-                passengerDesc = "Child";
+                passengerDesc = String.format("Passenger %d (%s)", passengerCount, "Child");
+                priceDesc = String.format("Child (%.2f EUR x %s%% + %s%%)",
+                        base,
+                        CHILD_DISCOUNT.multiply(new BigDecimal("100")).stripTrailingZeros().toPlainString(),
+                        taxPercentSum);
             }
             BigDecimal passengerWithTax = passengerPreTax.multiply(taxMultiplier).setScale(2, ROUND);
-            items.add(ItemPrice.builder().description(passengerDesc).price(passengerWithTax).build());
+            priceDesc = priceDesc + " = " + passengerWithTax.toPlainString() + " EUR";
+            items.add(ItemPrice.builder()
+                    .description(passengerDesc)
+                    .price(passengerWithTax)
+                    .priceDescription(priceDesc)
+                    .build());
             total = total.add(passengerWithTax);
 
             // Luggage
@@ -60,11 +73,22 @@ public class PricingServiceImpl implements PricingService {
                 BigDecimal luggagePreTax = luggageUnit.multiply(BigDecimal.valueOf(p.getLuggageCount()));
                 BigDecimal luggageWithTax = luggagePreTax.multiply(taxMultiplier).setScale(2, ROUND);
                 items.add(ItemPrice.builder()
-                        .description(luggageDescription(p.getLuggageCount()))
+                        .description(String.format("Luggage for passenger %d (%s)",
+                                passengerCount,
+                                luggageDescription(p.getLuggageCount())))
                         .price(luggageWithTax)
+                        .priceDescription(String.format("%s (%d x %.2f EUR x %s%% + %s%% = %.2f EUR)",
+                                luggageDescription(p.getLuggageCount()),
+                                p.getLuggageCount(),
+                                base,
+                                LUGGAGE_RATE.multiply(new BigDecimal("100")).stripTrailingZeros().toPlainString(),
+                                taxPercentSum,
+                                luggageWithTax
+                                ))
                         .build());
                 total = total.add(luggageWithTax);
             }
+            passengerCount++;
         }
 
         return DraftPriceResponse.builder()

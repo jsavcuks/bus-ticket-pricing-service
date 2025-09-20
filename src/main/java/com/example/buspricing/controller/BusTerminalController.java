@@ -3,6 +3,7 @@ package com.example.buspricing.controller;
 import com.example.buspricing.controller.request.BusTerminalRequest;
 import com.example.buspricing.domain.BusTerminal;
 import com.example.buspricing.repository.BusTerminalRepository;
+import com.example.buspricing.exception.ValidationErrorException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +26,10 @@ public class BusTerminalController {
     public ResponseEntity<?> create(@Valid @RequestBody BusTerminalRequest request) {
         // Reject if already exists to avoid silent updates
         if (repository.existsById(request.getTerminalName())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Terminal already exists: " + request.getTerminalName());
+            throw new ValidationErrorException("terminalName",
+                    "terminal already exists",
+                    request.getTerminalName(),
+                    HttpStatus.CONFLICT);
         }
 
         BusTerminal entity = BusTerminal.builder()

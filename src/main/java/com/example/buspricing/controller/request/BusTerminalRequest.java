@@ -11,9 +11,9 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class BusTerminalRequest {
-    @NotBlank
+    @NotBlank(message = "Terminal name must not be blank")
     private String terminalName;
 
-    @DecimalMin(value = "0.00")
+    @DecimalMin(value = "0.00", message = "Base price must be greater than or equal to 0.00")
     private BigDecimal basePrice;
 }

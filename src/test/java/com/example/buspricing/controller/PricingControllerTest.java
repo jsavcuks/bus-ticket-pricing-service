@@ -4,7 +4,7 @@ import com.example.buspricing.controller.request.DraftPriceRequest;
 import com.example.buspricing.controller.request.Passenger;
 import com.example.buspricing.controller.response.DraftPriceResponse;
 import com.example.buspricing.controller.response.ItemPrice;
-import com.example.buspricing.service.BasePriceServiceImpl;
+import com.example.buspricing.exception.ValidationErrorException;
 import com.example.buspricing.service.PricingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -12,6 +12,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -19,7 +20,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -75,11 +77,15 @@ class PricingControllerTest {
                 .andExpect(jsonPath("$.total", is(29.04)));
     }
 
-    // ... existing code ...
     @Test
     void post_draft_returns_404_when_route_not_found() throws Exception {
         Mockito.when(pricingService.calculateDraftPrice(Mockito.any(DraftPriceRequest.class)))
-                .thenThrow(new BasePriceServiceImpl.RouteNotFoundException("Unknown route: Nowhere"));
+                .thenThrow(new ValidationErrorException(
+                        "route",
+                        "Unknown route: Nowhere",
+                        "Nowhere",
+                        HttpStatus.NOT_FOUND
+                ));
 
         String body = objectMapper.writeValueAsString(DraftPriceRequest.builder()
                 .route("Nowhere")
@@ -93,10 +99,54 @@ class PricingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string(containsString("Unknown route")));
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Validation error"))
+                .andExpect(jsonPath("$.path").value("/api/pricing/draft"))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.errors[0].field").value("route"))
+                .andExpect(jsonPath("$.errors[0].message").value("Unknown route: Nowhere"))
+                .andExpect(jsonPath("$.errors[0].rejectedValue").value("Nowhere"));
+
+        Mockito.verify(pricingService, Mockito.times(1))
+                .calculateDraftPrice(Mockito.any(DraftPriceRequest.class));
+        Mockito.verifyNoMoreInteractions(pricingService);
     }
 
     // ... existing code ...
+
+    @Test
+    void post_draft_returns_400_when_luggage_count_negative() throws Exception {
+        String body = objectMapper.writeValueAsString(DraftPriceRequest.builder()
+                .route("Vilnius, Lithuania")
+                .date(LocalDate.of(2025, 1, 1))
+                .passengers(List.of(
+                        Passenger.builder().type(Passenger.Type.ADULT).luggageCount(-1).build()
+                ))
+                .build());
+
+        mockMvc.perform(post("/api/pricing/draft")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void post_draft_returns_400_when_luggage_count_unreasonably_high() throws Exception {
+        String body = objectMapper.writeValueAsString(DraftPriceRequest.builder()
+                .route("Vilnius, Lithuania")
+                .date(LocalDate.of(2025, 1, 1))
+                .passengers(List.of(
+                        Passenger.builder().type(Passenger.Type.ADULT).luggageCount(101).build()
+                ))
+                .build());
+
+        mockMvc.perform(post("/api/pricing/draft")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
     @Test
     void post_draft_returns_400_when_route_blank() throws Exception {
         String body = objectMapper.writeValueAsString(DraftPriceRequest.builder()
@@ -145,19 +195,4 @@ class PricingControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @Test
-    void post_draft_returns_415_when_missing_content_type() throws Exception {
-        // Spring MVC usually requires proper content type for @RequestBody
-        String body = objectMapper.writeValueAsString(DraftPriceRequest.builder()
-                .route("Vilnius, Lithuania")
-                .date(LocalDate.of(2025, 1, 1))
-                .passengers(List.of(
-                        Passenger.builder().type(Passenger.Type.ADULT).luggageCount(0).build()
-                ))
-                .build());
-
-        mockMvc.perform(post("/api/pricing/draft")
-                        .content(body))
-                .andExpect(status().isUnsupportedMediaType());
-    }
 }

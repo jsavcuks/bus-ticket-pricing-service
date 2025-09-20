@@ -25,9 +25,5 @@ public class PricingController {
         return ResponseEntity.ok(response);
     }
 
-    @ExceptionHandler(BasePriceServiceImpl.RouteNotFoundException.class)
-    public ResponseEntity<String> handleRouteNotFound(BasePriceServiceImpl.RouteNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-    }
 }
 
