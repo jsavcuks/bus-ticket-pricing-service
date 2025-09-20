@@ -31,6 +31,12 @@ How to run
 - H2 Console (optional):
     - Enable via Spring properties if needed and visit /h2-console
 
+Testing
+
+How to run
+- Unix/macOS: `./gradlew test`
+- Windows: `gradlew.bat test`
+
 API
 
 1. Create/set a base price for a bus terminal
@@ -158,16 +164,10 @@ API
                     "path": "/api/pricing/draft"
                }
 
-Testing
-
-How to run
-- Unix/macOS: `./gradlew test`
-- Windows: `gradlew.bat test`
-
 Exception handling
 - Validation errors (MethodArgumentNotValidException/BindException) → ApiError with errors[]
-- Custom ValidationErrorException → ApiError with provided HTTP status (e.g., 422)
-- Generic exceptions → 500 Internal Server Error with "Unexpected error"
+- Custom ValidationErrorException → ApiError with provided HTTP status (e.g., 409)
+- 500 Internal Server Error with "Unexpected error"
 
 Extensibility considerations
 
