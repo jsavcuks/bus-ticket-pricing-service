@@ -94,62 +94,69 @@ API
             "totalPrice": 15.73,
             "totalPriceDescription": "15.73 EUR"
         }
-- Error responses
-    - 404 Not Found: unknown route (terminal not in DB)
-      - request 
-        - ```json 
+  - Error responses
+      - 404 Not Found: unknown route (terminal not in DB)
+        - request 
+          - ```json 
+                {
+                    "route": "Kaunas, Lithuania",
+                    "passengers": [
+                        {
+                        "type": "ADULT",
+                        "luggageCount": 1
+                        }
+                    ]
+                }
+        - response  
+          - ```json (response)
+               {
+                    "timestamp": "2025-09-20 12:58:50",
+                    "status": 404,
+                    "error": "Validation error",
+                    "path": "/api/pricing/draft",
+                    "errors": [
+                        {
+                        "field": "route",
+                        "message": "route not found",
+                        "rejectedValue": "Kaunas, Lithuania"
+                        }
+                    ]
+                }
+      - 400 Bad Request: validation failed (blank route, empty passengers, etc.)
+        - request
+          - ```json 
               {
-                  "route": "Kaunas, Lithuania",
+                  "route": "Vilnius, Lithuania",
                   "passengers": [
                       {
                       "type": "ADULT",
-                      "luggageCount": 1
+                      "luggageCount": -1
                       }
                   ]
               }
-      - response  
-        - ```json (response)
-             {
-                  "timestamp": "2025-09-20 12:58:50",
-                  "status": 404,
-                  "error": "Validation error",
-                  "path": "/api/pricing/draft",
-                  "errors": [
-                      {
-                      "field": "route",
-                      "message": "route not found",
-                      "rejectedValue": "Kaunas, Lithuania"
-                      }
-                  ]
-              }
-    - 400 Bad Request: validation failed (blank route, empty passengers, etc.)
-      - request
-        - ```json 
-            {
-                "route": "Vilnius, Lithuania",
-                "passengers": [
-                    {
-                    "type": "ADULT",
-                    "luggageCount": -1
-                    }
-                ]
-            }
-        - response
-        - ```json
-            {
-                  "timestamp": "2025-09-20 13:05:34",
-                  "status": 400,
-                  "error": "Validation failed",
-                  "path": "/api/pricing/draft",
-                  "errors": [
-                      {
-                      "field": "passengers[0].luggageCount",
-                      "message": "Luggage count must be greater than or equal to 0",
-                      "rejectedValue": -1
-                      }
-                  ]
-             }
-    - 500 Internal Server Error: unexpected error
+          - response
+          - ```json
+              {
+                    "timestamp": "2025-09-20 13:05:34",
+                    "status": 400,
+                    "error": "Validation failed",
+                    "path": "/api/pricing/draft",
+                    "errors": [
+                        {
+                        "field": "passengers[0].luggageCount",
+                        "message": "Luggage count must be greater than or equal to 0",
+                        "rejectedValue": -1
+                        }
+                    ]
+               }
+      - 500 Internal Server Error: unexpected error
+          - ```json
+               {
+                    "timestamp": "2025-09-20 13:28:47",
+                    "status": 500,
+                    "error": "Unexpected error",
+                    "path": "/api/pricing/draft"
+               }
 
 Testing
 
