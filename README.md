@@ -39,7 +39,7 @@ How to run
 
 API
 
-1. Create/set a base price for a bus terminal
+1. Create a base price for a bus terminal
 - POST /api/bus-terminals
   - Request
     - ```json
