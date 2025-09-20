@@ -71,6 +71,7 @@ API
         
 2. Calculate draft ticket price
 - POST /api/pricing/draft
+  - In this version only	[ADULT, CHILD] passenger type values accepted
   - Request
   - ```json
     {
@@ -91,7 +92,7 @@ API
               {
                 "description": "Luggage for passenger 1 (1 item)",
                 "price": 3.63,
-                "priceDescription": "1 item (1 x 10.00 EUR x 30% + 21%) = 3.63 EUR"
+                "priceDescription": "One bag (1 x 10,00 EUR x 30% + 21%) = 3,63 EUR"
               }
             ],
             "totalPrice": 15.73,
