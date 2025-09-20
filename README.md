@@ -52,7 +52,7 @@ API
     - 201 Created
     - 409 Conflict: terminal already exists
       - ```json
-          - {
+           {
                 "timestamp": "2025-09-20 12:54:45",
                 "status": 409,
                 "error": "Validation error",
@@ -64,7 +64,8 @@ API
                     "rejectedValue": "Tallinn, Estonia"
                     }
                 ]
-            }
+           }
+        
 2. Calculate draft ticket price
 - POST /api/pricing/draft
   - Request
