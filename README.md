@@ -96,7 +96,8 @@ API
         }
 - Error responses
     - 404 Not Found: unknown route (terminal not in DB)
-      - ```json (request)
+      - request 
+      - ```json 
             {
                 "route": "Kaunas, Lithuania",
                 "passengers": [
@@ -106,6 +107,7 @@ API
                     }
                 ]
             }
+      - response  
       - ```json (response)
            {
                 "timestamp": "2025-09-20 12:58:50",
