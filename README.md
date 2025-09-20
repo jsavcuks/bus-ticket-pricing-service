@@ -9,7 +9,7 @@ A Spring Boot service that calculates draft ticket prices for bus routes using:
 Implementation description
 
 - Technology: Java 21, Spring Boot, Spring MVC, Spring Data JPA (H2), Jakarta Validation, Lombok.
-- Persistence: Only BusTerminal (terminal name + base price) is stored in H2.
+- Persistence: Only BusTerminal (terminal name (route) + base price) is stored in H2.
 - External services (conceptually):
     - Base price service uses the BusTerminal table.
     - Tax rate service is in-memory and returns VAT 21% (can be extended).
@@ -25,11 +25,8 @@ How to run
 - Start the app:
     - Unix/macOS: ./gradlew bootRun
     - Windows: gradlew.bat bootRun
-- Run tests:
-    - Unix/macOS: ./gradlew test
-    - Windows: gradlew.bat test
 - H2 Console (optional):
-    - Enable via Spring properties if needed and visit /h2-console
+    - Enable via Spring properties if needed (by default is enabled) and visit /h2-console
 
 Testing
 
