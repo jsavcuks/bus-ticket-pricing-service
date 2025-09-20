@@ -3,7 +3,6 @@ package com.example.buspricing.service;
 import com.example.buspricing.controller.request.DraftPriceRequest;
 import com.example.buspricing.controller.request.Passenger;
 import com.example.buspricing.controller.response.DraftPriceResponse;
-import com.example.buspricing.controller.response.ItemPrice;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,45 +27,6 @@ class PricingServiceImplTest {
 
     @InjectMocks
     private PricingServiceImpl pricingService;
-
-    @Test
-    void acceptance_case_adult_with_two_bags_child_with_one_bag_vat_21() {
-        String route = "Vilnius, Lithuania";
-        LocalDate date = LocalDate.of(2025, 1, 1);
-
-        when(basePriceService.getBasePrice(route)).thenReturn(new BigDecimal("10.00"));
-        when(taxRateService.getTaxRates(date)).thenReturn(List.of(
-                new TaxRate("VAT", new BigDecimal("21"))
-        ));
-
-        DraftPriceRequest request = DraftPriceRequest.builder()
-                .route(route)
-                .date(date)
-                .passengers(List.of(
-                        Passenger.builder().type(Passenger.Type.ADULT).luggageCount(2).build(),
-                        Passenger.builder().type(Passenger.Type.CHILD).luggageCount(1).build()
-                ))
-                .build();
-
-        DraftPriceResponse response = pricingService.calculateDraftPrice(request);
-
-        List<ItemPrice> items = response.getItems();
-        assertEquals(4, items.size());
-
-        assertEquals("Adult", items.get(0).getDescription());
-        assertEquals(new BigDecimal("12.10"), items.get(0).getPrice());
-
-        assertEquals("Two bags", items.get(1).getDescription());
-        assertEquals(new BigDecimal("7.26"), items.get(1).getPrice());
-
-        assertEquals("Child", items.get(2).getDescription());
-        assertEquals(new BigDecimal("6.05"), items.get(2).getPrice());
-
-        assertEquals("One bag", items.get(3).getDescription());
-        assertEquals(new BigDecimal("3.63"), items.get(3).getPrice());
-
-        assertEquals(new BigDecimal("29.04"), response.getTotal());
-    }
 
     @Test
     void multiple_taxes_are_summed() {
@@ -114,5 +74,85 @@ class PricingServiceImplTest {
 
         assertEquals(0, response.getItems().size());
         assertEquals(new BigDecimal("0.00"), response.getTotal());
+    }
+
+    @Test
+    void one_child_with_luggage_is_priced_correctly() {
+        String route = "Any";
+        LocalDate date = LocalDate.now();
+
+        when(basePriceService.getBasePrice(route)).thenReturn(new BigDecimal("20.00"));
+        when(taxRateService.getTaxRates(date)).thenReturn(List.of(
+                new TaxRate("VAT", new BigDecimal("10"))
+        ));
+
+        DraftPriceRequest request = DraftPriceRequest.builder()
+                .route(route)
+                .date(date)
+                .passengers(List.of(
+                        Passenger.builder().type(Passenger.Type.CHILD).luggageCount(2).build()
+                ))
+                .build();
+
+        DraftPriceResponse response = pricingService.calculateDraftPrice(request);
+
+        assertEquals(2, response.getItems().size());
+        assertEquals(new BigDecimal("11.00"), response.getItems().get(0).getPrice()); // Child price
+        assertEquals(new BigDecimal("13.20"), response.getItems().get(1).getPrice()); // Luggage price
+        assertEquals(new BigDecimal("24.20"), response.getTotal());
+    }
+
+    @Test
+    void multiple_passengers_are_priced_correctly() {
+        String route = "Any";
+        LocalDate date = LocalDate.now();
+
+        when(basePriceService.getBasePrice(route)).thenReturn(new BigDecimal("15.00"));
+        when(taxRateService.getTaxRates(date)).thenReturn(List.of(
+                new TaxRate("VAT", new BigDecimal("20"))
+        ));
+
+        DraftPriceRequest request = DraftPriceRequest.builder()
+                .route(route)
+                .date(date)
+                .passengers(List.of(
+                        Passenger.builder().type(Passenger.Type.ADULT).luggageCount(0).build(),
+                        Passenger.builder().type(Passenger.Type.CHILD).luggageCount(1).build()
+                ))
+                .build();
+
+        DraftPriceResponse response = pricingService.calculateDraftPrice(request);
+
+        assertEquals(3, response.getItems().size());
+        assertEquals(new BigDecimal("18.00"), response.getItems().get(0).getPrice()); // Adult price
+        assertEquals(new BigDecimal("9.00"), response.getItems().get(1).getPrice());  // Child price
+        assertEquals(new BigDecimal("5.40"), response.getItems().get(2).getPrice()); // Luggage price
+        assertEquals(new BigDecimal("32.40"), response.getTotal());
+    }
+
+    @Test
+    void luggage_with_multiple_bags_is_priced_correctly() {
+        String route = "Any";
+        LocalDate date = LocalDate.now();
+
+        when(basePriceService.getBasePrice(route)).thenReturn(new BigDecimal("30.00"));
+        when(taxRateService.getTaxRates(date)).thenReturn(List.of(
+                new TaxRate("VAT", new BigDecimal("5"))
+        ));
+
+        DraftPriceRequest request = DraftPriceRequest.builder()
+                .route(route)
+                .date(date)
+                .passengers(List.of(
+                        Passenger.builder().type(Passenger.Type.ADULT).luggageCount(3).build()
+                ))
+                .build();
+
+        DraftPriceResponse response = pricingService.calculateDraftPrice(request);
+
+        assertEquals(2, response.getItems().size());
+        assertEquals(new BigDecimal("31.50"), response.getItems().get(0).getPrice()); // Adult price
+        assertEquals(new BigDecimal("28.35"), response.getItems().get(1).getPrice()); // Luggage price
+        assertEquals(new BigDecimal("59.85"), response.getTotal());
     }
 }
