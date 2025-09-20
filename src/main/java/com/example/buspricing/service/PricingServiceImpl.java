@@ -77,7 +77,7 @@ public class PricingServiceImpl implements PricingService {
                                 passengerCount,
                                 luggageDescription(p.getLuggageCount())))
                         .price(luggageWithTax)
-                        .priceDescription(String.format("%s (%d x %.2f EUR x %s%% + %s%% = %.2f EUR)",
+                        .priceDescription(String.format("%s (%d x %.2f EUR x %s%% + %s%%) = %.2f EUR",
                                 luggageDescription(p.getLuggageCount()),
                                 p.getLuggageCount(),
                                 base,
