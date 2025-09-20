@@ -4,6 +4,8 @@ import com.example.buspricing.controller.request.DraftPriceRequest;
 import com.example.buspricing.controller.request.Passenger;
 import com.example.buspricing.controller.response.DraftPriceResponse;
 import com.example.buspricing.controller.response.ItemPrice;
+import com.example.buspricing.model.TaxRate;
+import com.example.buspricing.util.PriceDescriptionFormatter;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -20,17 +22,21 @@ public class PricingServiceImpl implements PricingService {
 
     private final BasePriceService basePriceService;
     private final TaxRateService taxRateService;
+    private final PriceDescriptionFormatter descriptionFormatter;
 
-    public PricingServiceImpl(BasePriceService basePriceService, TaxRateService taxRateService) {
+    public PricingServiceImpl(BasePriceService basePriceService,
+                              TaxRateService taxRateService,
+                              PriceDescriptionFormatter descriptionFormatter) {
         this.basePriceService = basePriceService;
         this.taxRateService = taxRateService;
+        this.descriptionFormatter = descriptionFormatter;
     }
 
     @Override
     public DraftPriceResponse calculateDraftPrice(DraftPriceRequest request) {
         BigDecimal base = basePriceService.getBasePrice(request.getRoute());
 
-        BigDecimal taxPercentSum = taxRateService.getTaxRates(request.getDate()).stream()
+        BigDecimal taxPercentSum = taxRateService.getTaxRates().stream()
                 .map(TaxRate::ratePercent)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -38,68 +44,48 @@ public class PricingServiceImpl implements PricingService {
 
         List<ItemPrice> items = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO;
-        int passengerCount = 1;
-        for (Passenger p : request.getPassengers()) {
-            BigDecimal passengerPreTax;
-            String passengerDesc;
-            String priceDesc;
-            if (p.getType() == Passenger.Type.ADULT) {
-                passengerPreTax = base;
-                passengerDesc = String.format("Passenger %d (%s)", passengerCount, "Adult");
-                priceDesc = String.format("Adult (%.2f EUR + %s%%)",
-                        base,
-                        taxPercentSum.stripTrailingZeros().toPlainString());
-            } else {
-                passengerPreTax = base.multiply(CHILD_DISCOUNT);
-                passengerDesc = String.format("Passenger %d (%s)", passengerCount, "Child");
-                priceDesc = String.format("Child (%.2f EUR x %s%% + %s%%)",
-                        base,
-                        CHILD_DISCOUNT.multiply(new BigDecimal("100")).stripTrailingZeros().toPlainString(),
-                        taxPercentSum);
-            }
+
+        int passengerIndex = 1;
+        for (Passenger passenger : request.getPassengers()) {
+            // === Passenger ===
+            BigDecimal passengerPreTax = passenger.getType() == Passenger.Type.ADULT
+                    ? base
+                    : base.multiply(CHILD_DISCOUNT);
+
             BigDecimal passengerWithTax = passengerPreTax.multiply(taxMultiplier).setScale(2, ROUND);
-            priceDesc = priceDesc + " = " + passengerWithTax.toPlainString() + " EUR";
-            items.add(ItemPrice.builder()
-                    .description(passengerDesc)
+
+            ItemPrice passengerItem = ItemPrice.builder()
+                    .description(descriptionFormatter.passengerDescription(passengerIndex, passenger))
                     .price(passengerWithTax)
-                    .priceDescription(priceDesc)
-                    .build());
+                    .priceDescription(descriptionFormatter.passengerPriceDescription(passenger, base, passengerWithTax, taxPercentSum))
+                    .build();
+
+            items.add(passengerItem);
             total = total.add(passengerWithTax);
 
-            // Luggage
-            if (p.getLuggageCount() > 0) {
+            // === Luggage ===
+            if (passenger.getLuggageCount() > 0) {
                 BigDecimal luggageUnit = base.multiply(LUGGAGE_RATE);
-                BigDecimal luggagePreTax = luggageUnit.multiply(BigDecimal.valueOf(p.getLuggageCount()));
+                BigDecimal luggagePreTax = luggageUnit.multiply(BigDecimal.valueOf(passenger.getLuggageCount()));
                 BigDecimal luggageWithTax = luggagePreTax.multiply(taxMultiplier).setScale(2, ROUND);
-                items.add(ItemPrice.builder()
-                        .description(String.format("Luggage for passenger %d (%s)",
-                                passengerCount,
-                                luggageDescription(p.getLuggageCount())))
+
+                ItemPrice luggageItem = ItemPrice.builder()
+                        .description(descriptionFormatter.luggageDescription(passengerIndex, passenger.getLuggageCount()))
                         .price(luggageWithTax)
-                        .priceDescription(String.format("%s (%d x %.2f EUR x %s%% + %s%%) = %.2f EUR",
-                                luggageDescription(p.getLuggageCount()),
-                                p.getLuggageCount(),
-                                base,
-                                LUGGAGE_RATE.multiply(new BigDecimal("100")).stripTrailingZeros().toPlainString(),
-                                taxPercentSum,
-                                luggageWithTax
-                                ))
-                        .build());
+                        .priceDescription(descriptionFormatter.luggagePriceDescription(passenger.getLuggageCount(), base, luggageWithTax, taxPercentSum))
+                        .build();
+
+                items.add(luggageItem);
                 total = total.add(luggageWithTax);
             }
-            passengerCount++;
+
+            passengerIndex++;
         }
 
         return DraftPriceResponse.builder()
                 .items(items)
-                .total(total.setScale(2, ROUND))
-                .totalDescription(String.format("%.2f EUR", total))
+                .totalPrice(total.setScale(2, ROUND))
+                .totalPriceDescription(descriptionFormatter.totalDescription(total))
                 .build();
-    }
-
-    private String luggageDescription(int count) {
-        if (count == 1) return "One bag";
-        if (count == 2) return "Two bags";
-        return count + " bags";
     }
 }

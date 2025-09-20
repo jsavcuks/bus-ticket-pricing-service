@@ -1,9 +1,9 @@
 package com.example.buspricing.service;
 
+import com.example.buspricing.model.TaxRate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -14,8 +14,7 @@ import java.util.List;
 public class InMemoryTaxRateService implements TaxRateService {
 
     @Override
-    public List<TaxRate> getTaxRates(LocalDate purchaseDate) {
+    public List<TaxRate> getTaxRates() {
         return List.of(new TaxRate("VAT", new BigDecimal("21")));
     }
 }
-

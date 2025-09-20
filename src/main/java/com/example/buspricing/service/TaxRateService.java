@@ -1,9 +1,10 @@
 package com.example.buspricing.service;
 
-import java.time.LocalDate;
+import com.example.buspricing.model.TaxRate;
+
 import java.util.List;
 
 public interface TaxRateService {
-    List<TaxRate> getTaxRates(LocalDate purchaseDate);
+    List<TaxRate> getTaxRates();
 
 }

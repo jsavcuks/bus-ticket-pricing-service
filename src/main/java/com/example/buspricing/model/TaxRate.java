@@ -1,4 +1,4 @@
-package com.example.buspricing.service;
+package com.example.buspricing.model;
 
 import java.math.BigDecimal;
 
