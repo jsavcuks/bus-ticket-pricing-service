@@ -77,23 +77,23 @@ API
         ]
     }
 - Successful response (example)
-- ```json
-  {
-  "items": [
-    {
-      "description": "Passenger 1 (ADULT)",
-      "price": 12.10,
-      "priceDescription": "Adult (10.00 EUR + 21%) = 12.10 EUR"
-    },
-    {
-      "description": "Luggage for passenger 1 (1 item)",
-      "price": 3.63,
-      "priceDescription": "1 item (1 x 10.00 EUR x 30% + 21%) = 3.63 EUR"
-    }
-  ],
-  "totalPrice": 15.73,
-  "totalPriceDescription": "15.73 EUR"
-}
+  - ```json
+        {
+            "items": [
+              {
+                "description": "Passenger 1 (ADULT)",
+                "price": 12.10,
+                "priceDescription": "Adult (10.00 EUR + 21%) = 12.10 EUR"
+              },
+              {
+                "description": "Luggage for passenger 1 (1 item)",
+                "price": 3.63,
+                "priceDescription": "1 item (1 x 10.00 EUR x 30% + 21%) = 3.63 EUR"
+              }
+            ],
+            "totalPrice": 15.73,
+            "totalPriceDescription": "15.73 EUR"
+        }
 - Error responses
     - 404 Not Found: unknown route (terminal not in DB)
       - ```json
