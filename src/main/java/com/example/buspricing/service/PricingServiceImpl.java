@@ -40,7 +40,6 @@ public class PricingServiceImpl implements PricingService {
         BigDecimal total = BigDecimal.ZERO;
         int passengerCount = 1;
         for (Passenger p : request.getPassengers()) {
-            // Passenger fare
             BigDecimal passengerPreTax;
             String passengerDesc;
             String priceDesc;
@@ -94,6 +93,7 @@ public class PricingServiceImpl implements PricingService {
         return DraftPriceResponse.builder()
                 .items(items)
                 .total(total.setScale(2, ROUND))
+                .totalDescription(String.format("%.2f EUR", total))
                 .build();
     }
 

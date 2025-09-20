@@ -15,4 +15,5 @@ import java.util.List;
 public class DraftPriceResponse {
     private List<ItemPrice> items;
     private BigDecimal total;
+    private String totalDescription;
 }
