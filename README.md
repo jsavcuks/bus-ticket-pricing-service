@@ -97,9 +97,36 @@ API
 - Error responses
     - 404 Not Found: unknown route (terminal not in DB)
       - request 
-      - ```json 
+        - ```json 
+              {
+                  "route": "Kaunas, Lithuania",
+                  "passengers": [
+                      {
+                      "type": "ADULT",
+                      "luggageCount": 1
+                      }
+                  ]
+              }
+      - response  
+        - ```json (response)
+             {
+                  "timestamp": "2025-09-20 12:58:50",
+                  "status": 404,
+                  "error": "Validation error",
+                  "path": "/api/pricing/draft",
+                  "errors": [
+                      {
+                      "field": "route",
+                      "message": "route not found",
+                      "rejectedValue": "Kaunas, Lithuania"
+                      }
+                  ]
+              }
+    - 400 Bad Request: validation failed (blank route, empty passengers, etc.)
+      - request
+        - ```json 
             {
-                "route": "Kaunas, Lithuania",
+                "route": "Vilnius, Lithuania",
                 "passengers": [
                     {
                     "type": "ADULT",
@@ -107,23 +134,8 @@ API
                     }
                 ]
             }
-      - response  
-      - ```json (response)
-           {
-                "timestamp": "2025-09-20 12:58:50",
-                "status": 404,
-                "error": "Validation error",
-                "path": "/api/pricing/draft",
-                "errors": [
-                    {
-                    "field": "route",
-                    "message": "route not found",
-                    "rejectedValue": "Kaunas, Lithuania"
-                    }
-                ]
-            }
-    - 400 Bad Request: validation failed (blank route, empty passengers, etc.) 
-      - ```json
+        - response
+        - ```json
             {
                   "timestamp": "2025-09-20 13:05:34",
                   "status": 400,
@@ -138,22 +150,6 @@ API
                   ]
              }
     - 500 Internal Server Error: unexpected error
-
-- The base price is retrieved by the terminal name (route).
-- For each passenger:
-    - Passenger item:
-        - Adult: base
-        - Child: base × 0.5
-    - Luggage item (if any): base × 0.3 × luggageCount
-    - Taxes: compute taxMultiplier = 1 + (sum of tax rates)/100 and multiply each item by taxMultiplier
-- Rounding: price per item is rounded to two decimals (HALF_UP). Total is the sum of item prices rounded to 2 decimals.
-- Example (acceptance criteria)
-    - Base: 10.00, VAT: 21%
-    - Adult: 10 × 1.21 = 12.10
-    - Two bags: 2 × (10 × 0.30) × 1.21 = 7.26
-    - Child: (10 × 0.50) × 1.21 = 6.05
-    - One bag: (10 × 0.30) × 1.21 = 3.63
-    - Total = 29.04
 
 Testing
 
