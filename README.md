@@ -33,33 +33,107 @@ How to run
 
 API
 
-1) Create/set base price for a bus terminal
+1. Create/set a base price for a bus terminal
 - POST /api/bus-terminals
-- Request
-  json { "terminalName": "Vilnius, Lithuania", "basePrice": 10.00 }
+  - Request
+    - ```json
+        {
+            "terminalName": "Tallinn, Estonia",
+            "basePrice": 30.00
+        }
+  - Successful response (example)
+      - ```json
+        {
+            "terminalName": "Tallinn, Estonia",
+            "basePrice": 30.00
+        }
+  
 - Responses
-    - 201 Created: terminal stored
+    - 201 Created
     - 409 Conflict: terminal already exists
-2) Calculate draft ticket price
+      - ```json
+          - {
+                "timestamp": "2025-09-20 12:54:45",
+                "status": 409,
+                "error": "Validation error",
+                "path": "/api/bus-terminals",
+                "errors": [
+                    {
+                    "field": "terminalName",
+                    "message": "terminal already exists",
+                    "rejectedValue": "Tallinn, Estonia"
+                    }
+                ]
+            }
+2. Calculate draft ticket price
 - POST /api/pricing/draft
-- Request
-  json { "route": "Vilnius, Lithuania", "date": "2025-01-01", "passengers": }
+  - Request
+  - ```json
+    {
+        "route": "Vilnius, Lithuania",
+        "passengers": [
+            { "type": "ADULT", "luggageCount": 1 }
+        ]
+    }
 - Successful response (example)
-  json { "items": , "total": 29.04 }
+- ```json
+  {
+  "items": [
+    {
+      "description": "Passenger 1 (ADULT)",
+      "price": 12.10,
+      "priceDescription": "Adult (10.00 EUR + 21%) = 12.10 EUR"
+    },
+    {
+      "description": "Luggage for passenger 1 (1 item)",
+      "price": 3.63,
+      "priceDescription": "1 item (1 x 10.00 EUR x 30% + 21%) = 3.63 EUR"
+    }
+  ],
+  "totalPrice": 15.73,
+  "totalPriceDescription": "15.73 EUR"
+}
 - Error responses
     - 404 Not Found: unknown route (terminal not in DB)
-    - 400 Bad Request: validation errors (blank route, missing date, empty passengers, etc.)
+      - ```json
+         {
+              "timestamp": "2025-09-20 12:58:50",
+              "status": 404,
+              "error": "Validation error",
+              "path": "/api/pricing/draft",
+              "errors": [
+                  {
+                  "field": "route",
+                  "message": "route not found",
+                  "rejectedValue": "Kaunas, Lithuania"
+                  }
+              ]
+          }
+    - 400 Bad Request: validation failed (blank route, empty passengers, etc.) 
+      - ```json
+            {
+                  "timestamp": "2025-09-20 13:05:34",
+                  "status": 400,
+                  "error": "Validation failed",
+                  "path": "/api/pricing/draft",
+                  "errors": [
+                      {
+                      "field": "passengers[0].luggageCount",
+                      "message": "Luggage count must be greater than or equal to 0",
+                      "rejectedValue": -1
+                      }
+                  ]
+             }
+    - 500 Internal Server Error: unexpected error
 
-Calculation rules
-
-- Base price is retrieved by terminal name (route).
+- The base price is retrieved by the terminal name (route).
 - For each passenger:
     - Passenger item:
         - Adult: base
         - Child: base × 0.5
     - Luggage item (if any): base × 0.3 × luggageCount
     - Taxes: compute taxMultiplier = 1 + (sum of tax rates)/100 and multiply each item by taxMultiplier
-- Rounding: price per item is rounded to 2 decimals (HALF_UP). Total is the sum of item prices rounded to 2 decimals.
+- Rounding: price per item is rounded to two decimals (HALF_UP). Total is the sum of item prices rounded to 2 decimals.
 - Example (acceptance criteria)
     - Base: 10.00, VAT: 21%
     - Adult: 10 × 1.21 = 12.10
@@ -70,14 +144,14 @@ Calculation rules
 
 Testing
 
-- Unit tests cover:
-    - Acceptance case (adult+2 bags, child+1 bag, VAT 21) → total 29.04
-    - Multiple taxes summed and applied
-    - Empty passenger list behavior in the service
-    - Base price service success and not-found cases
-- Web slice tests cover:
-    - POST /api/pricing/draft returns expected JSON
-    - Validation errors (400) and route-not-found mapping (404)
+How to run
+- Unix/macOS: `./gradlew test`
+- Windows: `gradlew.bat test`
+
+Exception handling
+- Validation errors (MethodArgumentNotValidException/BindException) → ApiError with errors[]
+- Custom ValidationErrorException → ApiError with provided HTTP status (e.g., 422)
+- Generic exceptions → 500 Internal Server Error with "Unexpected error"
 
 Extensibility considerations
 
@@ -101,9 +175,3 @@ Extensibility considerations
 - API evolution:
     - Version endpoints (e.g., /api/v1/pricing/draft).
     - Consider adding an endpoint to preview/configure fare rules.
-
-Notes
-
-- Only base prices are persisted. All other data is computed at request time.
-- Keep monetary amounts as numeric JSON values; presentation formatting is up to clients.
-
