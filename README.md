@@ -79,7 +79,10 @@ API
     {
         "route": "Vilnius, Lithuania",
         "passengers": [
-            { "type": "ADULT", "luggageCount": 1 }
+            { 
+			"type": "ADULT", 
+			"luggageCount": 1
+			}
         ]
     }
 - Successful response (example)
