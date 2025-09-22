@@ -73,7 +73,7 @@ API
         
 2. Calculate draft ticket price
 - POST /api/pricing/draft
-  - In this version only	[ADULT, CHILD] passenger type values accepted
+  - In this version only [ADULT, CHILD] passenger type values are accepted
   - Request
   - ```json
     {
