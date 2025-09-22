@@ -27,7 +27,9 @@ How to run
     - Windows: gradlew.bat bootRun
 - H2 Console (optional):
     - Enable via Spring properties if needed (by default is enabled) and visit /h2-console
-
+- API Docs (Swagger):
+    - Swagger UI: http://localhost:8080/swagger-ui.html
+	
 Testing
 
 How to run
